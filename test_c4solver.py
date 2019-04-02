@@ -88,6 +88,20 @@ def test_parse_grid():
 +---------------+
 '''.strip())
 
+def test_smaller_grid():
+    grid = Grid.parse('''
+...
+.AB
+'''.strip())
+    with MockOutput() as mocko:
+        grid.print()
+        mocko.assert_contains('''
++-------+
+| . . . |
+| . A B |
++-------+
+'''.strip())
+
 def test_grid_to2d():
     grid = Grid.parse('''
 .......

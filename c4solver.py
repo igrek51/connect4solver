@@ -12,18 +12,12 @@ WIN_CONDITION = 4
 DISC_A = 'A'
 DISC_B = 'B'
 
-# for 7x6 grid only, lookup table for performance boost
-DiagonalChecksUR = [
-    [0,2], [0,1], [0,0], [1,0], [2,0], [3,0]
-]
-DiagonalChecksUL = [
-    [6,2], [6,1], [6,0], [5,0], [4,0], [3,0]
-]
-
 
 class Grid(object):
-    def __init__(self):
-        self.columns = [[] for i in range(BOARD_W)]
+    def __init__(self, w=BOARD_W, h=BOARD_H):
+        self.w = w
+        self.h = h
+        self.columns = [[] for i in range(self.w)]
 
     def get(self, x: int, y: int):
         """axes oriented top-right: y^.->x"""
@@ -37,42 +31,45 @@ class Grid(object):
         column[y] = value
 
     def print(self):
-        print('+-' + '--' * BOARD_W + '+')
-        for y in reversed(range(BOARD_H)):
+        print('+-' + '--' * self.w + '+')
+        for y in reversed(range(self.h)):
             row_cells = []
-            for x in range(BOARD_W):
+            for x in range(self.w):
                 cell = self.get(x, y)
                 if not cell:
                     cell = '.'
                 row_cells.append(cell)
             print('| ' + ' '.join(row_cells) + ' |')
-        print('+-' + '--' * BOARD_W + '+')
-        print('| ' + ' '.join([str(i) for i in range(BOARD_W)]) + ' |')
+        print('+-' + '--' * self.w + '+')
+        print('| ' + ' '.join([str(i) for i in range(self.w)]) + ' |')
 
     def to2d_xy(self):
         return [
-            [self.get(x, y) for y in range(BOARD_H)]
-            for x in range(BOARD_W)
+            [self.get(x, y) for y in range(self.h)]
+            for x in range(self.w)
         ]
 
     def to2d_yx(self):
         return [
-            [self.get(x, y) for x in range(BOARD_W)]
-            for y in range(BOARD_H)
+            [self.get(x, y) for x in range(self.w)]
+            for y in range(self.h)
         ]
 
     def put(self, x: int, value: Optional[str]):
         # print('putting {} into {} column'.format(value, x))
         column = self.columns[x]
-        if len(column) >= BOARD_H:
+        if len(column) >= self.h:
             raise RuntimeError('column is already full')
         column.append(value)
         return self
 
     @staticmethod
     def parse(txt: str):
-        grid = Grid()
-        for line in txt.strip().splitlines()[::-1]:
+        lines = txt.strip().splitlines()[::-1]
+        h = len(lines)
+        w = len(lines[0])
+        grid = Grid(w=w, h=h)
+        for line in lines:
             for idx, cell in enumerate(line):
                 if cell in {DISC_A, DISC_B}:
                     grid.put(idx, cell)
@@ -82,7 +79,7 @@ class Grid(object):
         return WinChecker.winner(self)
 
     def clone(self):
-        copy = Grid()
+        copy = Grid(w=self.w, h=self.h)
         copy.columns = [column[:] for column in self.columns]
         return copy
 
@@ -124,14 +121,17 @@ class WinChecker(object):
             sublist.append(self.grid.get(xstart, ystart))
             xstart += xstep
             ystart += ystep
-            if xstart < 0 or xstart >= BOARD_W or ystart < 0 or ystart >= BOARD_H:
+            if xstart < 0 or xstart >= self.grid.w or ystart < 0 or ystart >= self.grid.h:
                 return sublist
 
     def _check_diagonal(self):
-        for ur in DiagonalChecksUR:
-            self._check_list(self._diagonal_sublist(ur[0], ur[1], +1, +1))
-        for ul in DiagonalChecksUL:
-            self._check_list(self._diagonal_sublist(ul[0], ul[1], -1, +1))
+        for xstart in range(0, self.grid.w - WIN_CONDITION + 1):
+            self._check_list(self._diagonal_sublist(xstart, 0, +1, +1))
+        for xstart in range(WIN_CONDITION - 1, self.grid.w):
+            self._check_list(self._diagonal_sublist(xstart, 0, -1, +1))
+        for ystart in range(1, self.grid.h - WIN_CONDITION + 1):
+            self._check_list(self._diagonal_sublist(0, ystart, +1, +1))
+            self._check_list(self._diagonal_sublist(self.grid.w - 1, ystart, -1, +1))
 
 
     @staticmethod
@@ -148,9 +148,12 @@ class WinChecker(object):
                 raise WinCondition(e)
 
 
+
+
 def find_best_move(ap):
-    pass
-    
+    print('searching for the best move...')
+    grid = Grid()
+
 
 def main():
     ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0', default_action=find_best_move)
