@@ -212,9 +212,39 @@ def test_win_checker_streak_check():
     assert list_winner([DISC_A, DISC_B, DISC_B, DISC_B, DISC_B]) is DISC_B
     assert list_winner([None, DISC_A, DISC_A, None, DISC_B, DISC_B, DISC_B, DISC_B, None]) is DISC_B
 
+# --- Move Best Results
 
+def test_best_result_simplest4():
+    grid = Grid.parse('''
+....
+ABAB
+ABAB
+ABAB
+'''.strip())
+    assert best_result(grid, PA, PA, 0) == WIN
+    assert best_result(grid, PA, PA, 0) == WIN
+    assert best_result(grid, PA, PA, 1) == LOSE
+    assert best_result(grid, PA, PA, 2) == WIN
+    assert best_result(grid, PA, PA, 3) == LOSE
 
+def test_best_result_simple_tie():
+    grid = Grid.parse('''
+..
+AB
+AB
+AB
+'''.strip())
+    assert best_result(grid, PA, PA, 0) == WIN
+    assert best_result(grid, PA, PA, 1) == TIE
 
+def test_best_result_none():
+    grid = Grid.parse('''
+BA
+AB
+AB
+AB
+'''.strip())
+    assert best_result(grid, PA, PA, 0) is None
 
 
 

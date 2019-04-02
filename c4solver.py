@@ -12,6 +12,18 @@ WIN_CONDITION = 4
 DISC_A = 'A'
 DISC_B = 'B'
 
+PA = 'A'
+PB = 'B'
+
+WIN = 'W'
+LOSE = 'L'
+TIE = 'T'
+
+move_results_weights = {
+    WIN: 1,
+    TIE: 0,
+    LOSE: -1,
+}
 
 class Grid(object):
     def __init__(self, w=BOARD_W, h=BOARD_H):
@@ -62,6 +74,9 @@ class Grid(object):
             raise RuntimeError('column is already full')
         column.append(value)
         return self
+
+    def can_make_move(self, x: int) -> bool:
+        return len(self.columns[x]) < self.h
 
     @staticmethod
     def parse(txt: str):
@@ -150,13 +165,68 @@ class WinChecker(object):
 
 
 
-def find_best_move(ap):
+def opposite_player(player: str) -> str:
+    return DISC_B if player is DISC_A else DISC_A
+
+
+
+def max_possible_move(posible_moves_results) -> str:
+    maxr = posible_moves_results[0]
+    for move_result in posible_moves_results:
+        if move_results_weights[move_result] > move_results_weights[maxr]:
+            maxr = move_result
+    return maxr
+
+def min_possible_move(posible_moves_results) -> str:
+    minr = posible_moves_results[0]
+    for move_result in posible_moves_results:
+        if move_results_weights[move_result] < move_results_weights[minr]:
+            minr = move_result
+    return minr
+
+def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
+    # make a move
+    if not grid.can_make_move(move):
+        return None
+    grid2 = grid.clone().put(move, move_player)
+    winner = grid2.winner()
+    if winner:
+        if winner == my_player:
+            return WIN
+        else:
+            return LOSE
+
+    # find further possible moves
+    next_player = opposite_player(move_player)
+    posible_moves_results = []
+    for potential_move in range(grid2.w):
+        move_result = best_result(grid2, my_player, next_player, potential_move)
+        if move_result:
+            posible_moves_results.append(move_result)
+    
+    if not posible_moves_results:
+        return TIE
+
+    # if analyzing my_player = next_player moves, best move is max 
+    if my_player != move_player:
+        return max_possible_move(posible_moves_results)
+    else:
+        return min_possible_move(posible_moves_results)
+
+
+
+def find_best_move_action(ap):
     print('searching for the best move...')
-    grid = Grid()
+    grid = Grid(2, 2)
+    my_player = PA
+    move_player = PA
+    for move in range(grid.w):
+        result = best_result(grid, my_player, move_player, move)
+        print('move: {}, result: {}'.format(move, result))
 
 
 def main():
-    ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0', default_action=find_best_move)
+    ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0', default_action=find_best_move_action)
     ap.add_param('player', help='select your player', choices=['A', 'B'])
     ap.process()
 
