@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import glue
 
+from typing import Optional
+
 BOARD_W = 7
 BOARD_H = 6
 
@@ -9,6 +11,7 @@ WIN_CONDITION = 4
 
 DISC_A = 'A'
 DISC_B = 'B'
+
 
 class Grid(object):
     def __init__(self):
@@ -34,6 +37,12 @@ class Grid(object):
         print('+-' + '--' * BOARD_W + '+')
         print('| ' + ' '.join([str(i) for i in range(BOARD_W)]) + ' |')
 
+    def to2d(self):
+        return [
+            [self.get(x, y) for y in range(BOARD_H)]
+            for x in range(BOARD_W)
+        ]
+
     def put(self, x: int, value: str):
         # print('putting {} into {} column'.format(value, x))
         column = self.columns[x]
@@ -50,6 +59,12 @@ class Grid(object):
                 if cell in {DISC_A, DISC_B}:
                     grid.put(idx, cell)
         return grid
+
+
+class WinChecker(object):
+    @staticmethod
+    def won(grid: Grid) -> Optional[str]:
+        return None
 
 
 

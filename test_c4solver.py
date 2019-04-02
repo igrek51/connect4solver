@@ -29,6 +29,8 @@ class MockOutput:
 def test_pytest():
     assert True
 
+# --- Test Grid
+
 def test_print_empty_grid():
     with MockOutput() as mocko:
         Grid().print()
@@ -86,6 +88,19 @@ def test_parse_grid():
 +---------------+
 '''.strip())
 
+def test_grid_to2d():
+    array = Grid.parse('''
+.......
+.......
+......B
+......B
+.B....A
+.A.A..B
+'''.strip()).to2d()
+    assert array[1][0] is DISC_A
+    assert array[1][1] is DISC_B
+    assert array[0][0] is None
 
 
+# --- Test Grid Validator
 
