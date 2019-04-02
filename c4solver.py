@@ -9,8 +9,8 @@ BOARD_H = 6
 
 WIN_CONDITION = 4
 
-DISC_A = 'A'
-DISC_B = 'B'
+PA = 'A'
+PB = 'B'
 
 PA = 'A'
 PB = 'B'
@@ -86,7 +86,7 @@ class Grid(object):
         grid = Grid(w=w, h=h)
         for line in lines:
             for idx, cell in enumerate(line):
-                if cell in {DISC_A, DISC_B}:
+                if cell in {PA, PB}:
                     grid.put(idx, cell)
         return grid
 
@@ -166,7 +166,7 @@ class WinChecker(object):
 
 
 def opposite_player(player: str) -> str:
-    return DISC_B if player is DISC_A else DISC_A
+    return PB if player == PA else PA
 
 
 
@@ -202,13 +202,17 @@ def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
     for potential_move in range(grid2.w):
         move_result = best_result(grid2, my_player, next_player, potential_move)
         if move_result:
+            if my_player == next_player and move_result == WIN:
+                return move_result
+            if my_player != next_player and move_result == LOSE:
+                return move_result
             posible_moves_results.append(move_result)
     
     if not posible_moves_results:
         return TIE
 
     # if analyzing my_player = next_player moves, best move is max 
-    if my_player != move_player:
+    if my_player == next_player:
         return max_possible_move(posible_moves_results)
     else:
         return min_possible_move(posible_moves_results)
@@ -217,7 +221,7 @@ def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
 
 def find_best_move_action(ap):
     print('searching for the best move...')
-    grid = Grid(2, 2)
+    grid = Grid(3, 3)
     my_player = PA
     move_player = PA
     for move in range(grid.w):

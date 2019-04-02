@@ -48,7 +48,7 @@ def test_print_empty_grid():
         mocko.assert_contains(expected.strip())
 
 def test_print_grid_with_disks_put():
-    grid = Grid().put(1, DISC_A).put(1, DISC_B).put(3, DISC_A)
+    grid = Grid().put(1, PA).put(1, PB).put(3, PA)
     with MockOutput() as mocko:
         grid.print()
         expected = '''
@@ -62,8 +62,8 @@ def test_print_grid_with_disks_put():
 +---------------+
 '''
         mocko.assert_contains(expected.strip())
-    assert grid.get(1, 0) == DISC_A
-    assert grid.get(1, 1) == DISC_B
+    assert grid.get(1, 0) == PA
+    assert grid.get(1, 1) == PB
     assert grid.get(0, 0) is None
     
 def test_parse_grid():
@@ -112,13 +112,13 @@ def test_grid_to2d():
 .A.A..B
 '''.strip())
     array = grid.to2d_xy()
-    assert array[1][0] is DISC_A
-    assert array[1][1] is DISC_B
+    assert array[1][0] is PA
+    assert array[1][1] is PB
     assert array[0][0] is None
 
     array = grid.to2d_yx()
-    assert array[0][1] is DISC_A
-    assert array[1][1] is DISC_B
+    assert array[0][1] is PA
+    assert array[1][1] is PB
     assert array[0][0] is None
 
 def test_grid_clone():
@@ -131,10 +131,10 @@ def test_grid_clone():
 .A.A..B
 '''.strip())
     grid2 = grid1.clone()
-    grid1.set(1, 0, DISC_B)
+    grid1.set(1, 0, PB)
 
-    assert grid1.get(1, 0) is DISC_B
-    assert grid2.get(1, 0) is DISC_A
+    assert grid1.get(1, 0) is PB
+    assert grid2.get(1, 0) is PA
     assert grid2.get(1, 2) is None
 
 
@@ -159,7 +159,7 @@ def test_win_checker_vertical():
 ......A
 .B....A
 .A.A..A
-'''.strip()).winner() is DISC_A
+'''.strip()).winner() is PA
     
 def test_win_checker_horizontal():
     assert Grid.parse('''
@@ -169,7 +169,7 @@ def test_win_checker_horizontal():
 ......A
 .B.BBBB
 AA.ABBA
-'''.strip()).winner() is DISC_B
+'''.strip()).winner() is PB
     
 def test_win_checker_diagonal():
     assert Grid.parse('''
@@ -179,7 +179,7 @@ def test_win_checker_diagonal():
 .....AA
 .B.BABB
 AA.ABBA
-'''.strip()).winner() is DISC_A
+'''.strip()).winner() is PA
     assert Grid.parse('''
 .......
 .......
@@ -187,7 +187,7 @@ AA.ABBA
 .AB..AA
 .BABABB
 ABAABBA
-'''.strip()).winner() is DISC_B
+'''.strip()).winner() is PB
     assert Grid.parse('''
 ...B...
 ..BB...
@@ -195,7 +195,7 @@ ABAABBA
 BAAA.AA
 AAAB.B.
 AABA.BA
-'''.strip()).winner() is DISC_B
+'''.strip()).winner() is PB
 
 def list_winner(l):
     try:
@@ -205,12 +205,12 @@ def list_winner(l):
 
 def test_win_checker_streak_check():
     assert list_winner([]) is None
-    assert list_winner([DISC_A]) is None
-    assert list_winner([DISC_A, DISC_A, DISC_A, DISC_A]) is DISC_A
-    assert list_winner([DISC_A, DISC_A, DISC_A, DISC_A, None, None]) is DISC_A
-    assert list_winner([None, None, DISC_A, DISC_A, DISC_A, DISC_A]) is DISC_A
-    assert list_winner([DISC_A, DISC_B, DISC_B, DISC_B, DISC_B]) is DISC_B
-    assert list_winner([None, DISC_A, DISC_A, None, DISC_B, DISC_B, DISC_B, DISC_B, None]) is DISC_B
+    assert list_winner([PA]) is None
+    assert list_winner([PA, PA, PA, PA]) is PA
+    assert list_winner([PA, PA, PA, PA, None, None]) is PA
+    assert list_winner([None, None, PA, PA, PA, PA]) is PA
+    assert list_winner([PA, PB, PB, PB, PB]) is PB
+    assert list_winner([None, PA, PA, None, PB, PB, PB, PB, None]) is PB
 
 # --- Move Best Results
 
