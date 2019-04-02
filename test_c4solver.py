@@ -166,6 +166,22 @@ def test_win_checker_diagonal():
 .B.BABB
 AA.ABBA
 '''.strip()).winner() is DISC_A
+    assert Grid.parse('''
+.......
+.......
+.B....B
+.AB..AA
+.BABABB
+ABAABBA
+'''.strip()).winner() is DISC_B
+    assert Grid.parse('''
+...B...
+..BB...
+.BBB..B
+BAAA.AA
+AAAB.B.
+AABA.BA
+'''.strip()).winner() is DISC_B
 
 def list_winner(l):
     try:

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import glue
 
-from typing import Optional
+from typing import Optional, List
 
 BOARD_W = 7
 BOARD_H = 6
@@ -11,6 +11,14 @@ WIN_CONDITION = 4
 
 DISC_A = 'A'
 DISC_B = 'B'
+
+# for 7x6 grid only, lookup table for performance boost
+DiagonalChecksUR = [
+    [0,2], [0,1], [0,0], [1,0], [2,0], [3,0]
+]
+DiagonalChecksUL = [
+    [6,2], [6,1], [6,0], [5,0], [4,0], [3,0]
+]
 
 
 class Grid(object):
@@ -98,6 +106,7 @@ class WinChecker(object):
             self._check_vertical()
             self._check_horizontal()
             self._check_diagonal()
+            self._check_diagonal()
         except WinCondition as e:
             return e.winner
 
@@ -109,8 +118,21 @@ class WinChecker(object):
         for column in self.grid.columns:
             self._check_list(column)
 
+    def _diagonal_sublist(self, xstart, ystart, xstep, ystep) -> List[str]:
+        sublist = []
+        while True:
+            sublist.append(self.grid.get(xstart, ystart))
+            xstart += xstep
+            ystart += ystep
+            if xstart < 0 or xstart >= BOARD_W or ystart < 0 or ystart >= BOARD_H:
+                return sublist
+
     def _check_diagonal(self):
-        return None
+        for ur in DiagonalChecksUR:
+            self._check_list(self._diagonal_sublist(ur[0], ur[1], +1, +1))
+        for ul in DiagonalChecksUL:
+            self._check_list(self._diagonal_sublist(ul[0], ul[1], -1, +1))
+
 
     @staticmethod
     def _check_list(l):
@@ -126,8 +148,12 @@ class WinChecker(object):
                 raise WinCondition(e)
 
 
+def find_best_move(ap):
+    pass
+    
+
 def main():
-    ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0')
+    ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0', default_action=find_best_move)
     ap.add_param('player', help='select your player', choices=['A', 'B'])
     ap.process()
 
