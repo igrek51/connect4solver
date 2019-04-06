@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import glue
 
+import datetime
+import time
 from typing import Optional, List
 
 BOARD_W = 7
@@ -66,7 +68,6 @@ class Grid(object):
         ]
 
     def put(self, x: int, value: Optional[str]):
-        # print('putting {} into {} column'.format(value, x))
         column = self.columns[x]
         if len(column) >= self.h:
             raise RuntimeError('column is already full')
@@ -149,6 +150,7 @@ class WinChecker(object):
 
     @staticmethod
     def _check_list(l, min_win):
+        """checks if there's a winning streak"""
         last_disc = None
         streak = 0
         for e in l:
@@ -167,7 +169,6 @@ def opposite_player(player: str) -> str:
     return PB if player == PA else PA
 
 
-
 def max_possible_move(posible_moves_results) -> str:
     maxr = posible_moves_results[0]
     for move_result in posible_moves_results:
@@ -182,7 +183,7 @@ def min_possible_move(posible_moves_results) -> str:
             minr = move_result
     return minr
 
-def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
+def best_result_dfs(grid: Grid, my_player: str, move_player: str, move: int) -> str:
     # make a move
     if not grid.can_make_move(move):
         return None
@@ -212,20 +213,116 @@ def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
     # if analyzing my_player = next_player moves, best move is max 
     if my_player == next_player:
         return max_possible_move(posible_moves_results)
-    else:
+    else: # opponent tries to minimize my winning moves
         return min_possible_move(posible_moves_results)
+
+
+my_player = PA
+
+
+class PotentialMove(object):
+    def __init__(self, grid: Grid, move_player: str, move: int, parent = None):
+        self.grid = grid
+        self.move_player = move_player
+        self.move = move
+        self.parent = parent
+        self.children = []
+        self.result = None
+
+    def set_result(self, result):
+        self.result = result
+        for child in self.children:
+            # FIXME remove from queue as well
+            del child
+        self.children = []
+        self.recalculate()
+
+    def recalculate(self):
+        if self.parent:
+
+            if self.result == WIN and self.move_player == my_player:
+                self.parent.set_result(self.result)
+
+            elif self.result == LOSE and self.move_player != my_player:
+                self.parent.set_result(self.result)
+
+            else:
+                child_results = [child.result for child in self.parent.children if child.result]
+                if len(child_results) == len(self.parent.children):
+                    # all the results are ready
+                    if self.move_player == my_player:
+                        self.parent.set_result(max_possible_move(child_results))
+                    else: # opponent tries to minimize my winning moves
+                        self.parent.set_result(min_possible_move(child_results))
+
+
+class BreadthFirstSearch(object):
+    def __init__(self, my_player: str):
+        self.my_player = my_player
+        self.moves_que = []
+
+
+
+    def best_result_bfs(self, grid: Grid, move_player: str, starting_move: int) -> str:
+        if grid.can_make_move(starting_move):
+            self.moves_que.append(PotentialMove(grid, move_player, starting_move))
+
+        while self.moves_que:
+            move = self.moves_que.popleft()
+
+            self.analyze_move(move)
+            move.recalculate()
+            # enque analyzing next level moves
+
+            # check if move is valid or is ending the game
+
+            # if the results are ready - infer the conclusion
+
+
+    def analyze_move(self, potential_move: PotentialMove):
+        grid2 = potential_move.grid.clone().put(potential_move.move, potential_move.move_player)
+        winner = grid2.winner()
+        if winner:
+            if winner == my_player:
+                potential_move.result = WIN
+            else:
+                potential_move.result = LOSE
+            return
+
+        # find further possible moves, enque analyzing next level moves
+        next_player = opposite_player(potential_move.move_player)
+        next_moves = []
+        for next_move in range(grid2.w):
+            if grid2.can_make_move(next_move):
+                next_moves.append(next_move)
+                potential_move.children.append()
+        
+        if not next_moves:
+            potential_move.result = TIE
+            return
+
+
+
+def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
+    return best_result_dfs(grid, my_player, move_player, move)
 
 
 def moves_results(grid, my_player, move_player) -> List[str]:
     return [best_result(grid, my_player, move_player, move) for move in range(grid.w)]
 
 
+def now() -> float:
+    return datetime.datetime.now()
+
+
 def find_moves_results_action(ap):
     print('searching for the moves results...')
     grid = Grid(3, 3)
     grid.print()
+    checkpoint = now()
     for idx, result in enumerate(moves_results(grid, PA, PA)):
         print('move: {}, result: {}'.format(idx, result))
+    print('duration: {}s'.format(now() - checkpoint))
 
 
 def main():
