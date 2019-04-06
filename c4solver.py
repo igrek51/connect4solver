@@ -216,19 +216,20 @@ def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
         return min_possible_move(posible_moves_results)
 
 
+def moves_results(grid, my_player, move_player) -> List[str]:
+    return [best_result(grid, my_player, move_player, move) for move in range(grid.w)]
 
-def find_best_move_action(ap):
-    print('searching for the best move...')
+
+def find_moves_results_action(ap):
+    print('searching for the moves results...')
     grid = Grid(3, 3)
-    my_player = PA
-    move_player = PA
-    for move in range(grid.w):
-        result = best_result(grid, my_player, move_player, move)
-        print('move: {}, result: {}'.format(move, result))
+    grid.print()
+    for idx, result in enumerate(moves_results(grid, PA, PA)):
+        print('move: {}, result: {}'.format(idx, result))
 
 
 def main():
-    ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0', default_action=find_best_move_action)
+    ap = glue.ArgsProcessor(app_name='Connect 4 solver', version='1.0.0', default_action=find_moves_results_action)
     ap.add_param('player', help='select your player', choices=['A', 'B'])
     ap.process()
 
