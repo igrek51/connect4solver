@@ -7,10 +7,7 @@ from typing import Optional, List
 BOARD_W = 7
 BOARD_H = 6
 
-WIN_CONDITION = 4
-
-PA = 'A'
-PB = 'B'
+MIN_WIN_CONDITION = 4
 
 PA = 'A'
 PB = 'B'
@@ -26,9 +23,10 @@ move_results_weights = {
 }
 
 class Grid(object):
-    def __init__(self, w=BOARD_W, h=BOARD_H):
+    def __init__(self, w=BOARD_W, h=BOARD_H, min_win=MIN_WIN_CONDITION):
         self.w = w
         self.h = h
+        self.min_win = min_win
         self.columns = [[] for i in range(self.w)]
 
     def get(self, x: int, y: int):
@@ -124,11 +122,11 @@ class WinChecker(object):
 
     def _check_horizontal(self):
         for row in self.yx:
-            self._check_list(row)
+            self._check_list(row, self.grid.min_win)
 
     def _check_vertical(self):
         for column in self.grid.columns:
-            self._check_list(column)
+            self._check_list(column, self.grid.min_win)
 
     def _diagonal_sublist(self, xstart, ystart, xstep, ystep) -> List[str]:
         sublist = []
@@ -140,17 +138,17 @@ class WinChecker(object):
                 return sublist
 
     def _check_diagonal(self):
-        for xstart in range(0, self.grid.w - WIN_CONDITION + 1):
-            self._check_list(self._diagonal_sublist(xstart, 0, +1, +1))
-        for xstart in range(WIN_CONDITION - 1, self.grid.w):
-            self._check_list(self._diagonal_sublist(xstart, 0, -1, +1))
-        for ystart in range(1, self.grid.h - WIN_CONDITION + 1):
-            self._check_list(self._diagonal_sublist(0, ystart, +1, +1))
-            self._check_list(self._diagonal_sublist(self.grid.w - 1, ystart, -1, +1))
+        for xstart in range(0, self.grid.w - self.grid.min_win + 1):
+            self._check_list(self._diagonal_sublist(xstart, 0, +1, +1), self.grid.min_win)
+        for xstart in range(self.grid.min_win - 1, self.grid.w):
+            self._check_list(self._diagonal_sublist(xstart, 0, -1, +1), self.grid.min_win)
+        for ystart in range(1, self.grid.h - self.grid.min_win + 1):
+            self._check_list(self._diagonal_sublist(0, ystart, +1, +1), self.grid.min_win)
+            self._check_list(self._diagonal_sublist(self.grid.w - 1, ystart, -1, +1), self.grid.min_win)
 
 
     @staticmethod
-    def _check_list(l):
+    def _check_list(l, min_win):
         last_disc = None
         streak = 0
         for e in l:
@@ -159,7 +157,7 @@ class WinChecker(object):
                 last_disc = e
             if e:
                 streak += 1
-            if streak >= WIN_CONDITION:
+            if streak >= min_win:
                 raise WinCondition(e)
 
 

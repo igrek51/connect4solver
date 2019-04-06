@@ -199,7 +199,7 @@ AABA.BA
 
 def list_winner(l):
     try:
-        WinChecker._check_list(l)
+        WinChecker._check_list(l, 4)
     except WinCondition as e:
         return e.winner
 
