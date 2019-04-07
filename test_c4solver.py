@@ -112,13 +112,13 @@ def test_grid_to2d():
 .A.A..B
 '''.strip())
     array = grid.to2d_xy()
-    assert array[1][0] is PA
-    assert array[1][1] is PB
+    assert array[1][0] == PA
+    assert array[1][1] == PB
     assert array[0][0] is None
 
     array = grid.to2d_yx()
-    assert array[0][1] is PA
-    assert array[1][1] is PB
+    assert array[0][1] == PA
+    assert array[1][1] == PB
     assert array[0][0] is None
 
 def test_grid_clone():
@@ -133,8 +133,8 @@ def test_grid_clone():
     grid2 = grid1.clone()
     grid1.set(1, 0, PB)
 
-    assert grid1.get(1, 0) is PB
-    assert grid2.get(1, 0) is PA
+    assert grid1.get(1, 0) == PB
+    assert grid2.get(1, 0) == PA
     assert grid2.get(1, 2) is None
 
 
@@ -159,7 +159,7 @@ def test_win_checker_vertical():
 ......A
 .B....A
 .A.A..A
-'''.strip()).winner() is PA
+'''.strip()).winner() == PA
     
 def test_win_checker_horizontal():
     assert Grid.parse('''
@@ -169,7 +169,7 @@ def test_win_checker_horizontal():
 ......A
 .B.BBBB
 AA.ABBA
-'''.strip()).winner() is PB
+'''.strip()).winner() == PB
     
 def test_win_checker_diagonal():
     assert Grid.parse('''
@@ -179,7 +179,7 @@ def test_win_checker_diagonal():
 .....AA
 .B.BABB
 AA.ABBA
-'''.strip()).winner() is PA
+'''.strip()).winner() == PA
     assert Grid.parse('''
 .......
 .......
@@ -187,7 +187,7 @@ AA.ABBA
 .AB..AA
 .BABABB
 ABAABBA
-'''.strip()).winner() is PB
+'''.strip()).winner() == PB
     assert Grid.parse('''
 ...B...
 ..BB...
@@ -195,7 +195,7 @@ ABAABBA
 BAAA.AA
 AAAB.B.
 AABA.BA
-'''.strip()).winner() is PB
+'''.strip()).winner() == PB
 
 def list_winner(l):
     try:
@@ -206,11 +206,11 @@ def list_winner(l):
 def test_win_checker_streak_check():
     assert list_winner([]) is None
     assert list_winner([PA]) is None
-    assert list_winner([PA, PA, PA, PA]) is PA
-    assert list_winner([PA, PA, PA, PA, None, None]) is PA
-    assert list_winner([None, None, PA, PA, PA, PA]) is PA
-    assert list_winner([PA, PB, PB, PB, PB]) is PB
-    assert list_winner([None, PA, PA, None, PB, PB, PB, PB, None]) is PB
+    assert list_winner([PA, PA, PA, PA]) == PA
+    assert list_winner([PA, PA, PA, PA, None, None]) == PA
+    assert list_winner([None, None, PA, PA, PA, PA]) == PA
+    assert list_winner([PA, PB, PB, PB, PB]) == PB
+    assert list_winner([None, PA, PA, None, PB, PB, PB, PB, None]) == PB
 
 # --- Move Best Results
 
@@ -221,11 +221,12 @@ ABAB
 ABAB
 ABAB
 '''.strip())
-    assert best_result(grid, PA, PA, 0) == WIN
-    assert best_result(grid, PA, PA, 0) == WIN
-    assert best_result(grid, PA, PA, 1) == LOSE
-    assert best_result(grid, PA, PA, 2) == WIN
-    assert best_result(grid, PA, PA, 3) == LOSE
+    searcher = DepthFirstSearcher(PA)
+    assert searcher.best_result(grid, PA, 0) == WIN
+    assert searcher.best_result(grid, PA, 0) == WIN
+    assert searcher.best_result(grid, PA, 1) == LOSE
+    assert searcher.best_result(grid, PA, 2) == WIN
+    assert searcher.best_result(grid, PA, 3) == LOSE
 
 def test_best_result_simple_tie():
     grid = Grid.parse('''
@@ -234,8 +235,9 @@ AB
 AB
 AB
 '''.strip())
-    assert best_result(grid, PA, PA, 0) == WIN
-    assert best_result(grid, PA, PA, 1) == TIE
+    searcher = DepthFirstSearcher(PA)
+    assert searcher.best_result(grid, PA, 0) == WIN
+    assert searcher.best_result(grid, PA, 1) == TIE
 
 def test_best_result_none():
     grid = Grid.parse('''
@@ -244,8 +246,17 @@ AB
 AB
 AB
 '''.strip())
-    assert best_result(grid, PA, PA, 0) is None
+    searcher = DepthFirstSearcher(PA)
+    assert searcher.best_result(grid, PA, 0) is None
 
+
+def test_best_result_none():
+    grid = Grid.parse('''
+...
+...
+...
+'''.strip())
+    assert moves_results(grid, PA, PA) == [TIE, TIE, TIE]
 
 
 

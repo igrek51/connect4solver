@@ -183,38 +183,82 @@ def min_possible_move(posible_moves_results) -> str:
             minr = move_result
     return minr
 
-def best_result_dfs(grid: Grid, my_player: str, move_player: str, move: int) -> str:
-    # make a move
-    if not grid.can_make_move(move):
-        return None
-    grid2 = grid.clone().put(move, move_player)
-    winner = grid2.winner()
-    if winner:
-        if winner == my_player:
-            return WIN
-        else:
-            return LOSE
 
-    # find further possible moves
-    next_player = opposite_player(move_player)
-    posible_moves_results = []
-    for potential_move in range(grid2.w):
-        move_result = best_result(grid2, my_player, next_player, potential_move)
-        if move_result:
-            if my_player == next_player and move_result == WIN:
-                return move_result
-            if my_player != next_player and move_result == LOSE:
-                return move_result
-            posible_moves_results.append(move_result)
-    
-    if not posible_moves_results:
-        return TIE
+class ResultsCache(object):
+    def __init__(self):
+        self.cache = {}
 
-    # if analyzing my_player = next_player moves, best move is max 
-    if my_player == next_player:
-        return max_possible_move(posible_moves_results)
-    else: # opponent tries to minimize my winning moves
-        return min_possible_move(posible_moves_results)
+    @staticmethod
+    def hashcode(grid: Grid):
+        # FIXME hashcode collissions are risky here
+        return hash(str(grid.columns))
+
+    def get(self, grid: Grid) -> str:
+        return self.cache.get(self.hashcode(grid))
+
+    def put(self, grid: Grid, result: str):
+        self.cache[self.hashcode(grid)] = result
+
+
+iterations = 0
+
+
+class DepthFirstSearcher(object):
+    def __init__(self, my_player: str):
+        self.my_player = my_player
+        self.results_cache = ResultsCache()
+
+
+    def best_result(self, grid: Grid, move_player: str, move: int) -> str:
+        global iterations
+        iterations += 1
+
+        cached = self.results_cache.get(grid)
+        if cached:
+            return cached
+
+        # make a move
+        if not grid.can_make_move(move):
+            return None
+        grid2 = grid.clone().put(move, move_player)
+        winner = grid2.winner()
+        if winner:
+            if winner == self.my_player:
+                self.results_cache.put(grid2, WIN)
+                return WIN
+            else:
+                self.results_cache.put(grid2, LOSE)
+                return LOSE
+
+        # find further possible moves
+        next_player = opposite_player(move_player)
+        posible_moves_results = []
+        for potential_move in range(grid2.w):
+            move_result = self.best_result(grid2, next_player, potential_move)
+            if move_result:
+
+                if self.my_player == next_player and move_result == WIN:
+                    self.results_cache.put(grid2, move_result)
+                    return move_result
+                if self.my_player != next_player and move_result == LOSE:
+                    self.results_cache.put(grid2, move_result)
+                    return move_result
+
+                posible_moves_results.append(move_result)
+        
+        if not posible_moves_results:
+            self.results_cache.put(grid2, TIE)
+            return TIE
+
+        # if analyzing my_player = next_player moves, best move is max 
+        if self.my_player == next_player:
+            result = max_possible_move(posible_moves_results)
+            self.results_cache.put(grid2, result)
+            return result
+        else: # opponent tries to minimize my winning moves
+            result = min_possible_move(posible_moves_results)
+            self.results_cache.put(grid2, result)
+            return result
 
 
 my_player = PA
@@ -256,7 +300,7 @@ class PotentialMove(object):
                         self.parent.set_result(min_possible_move(child_results))
 
 
-class BreadthFirstSearch(object):
+class BreadthFirstSearcher(object):
     def __init__(self, my_player: str):
         self.my_player = my_player
         self.moves_que = []
@@ -302,13 +346,9 @@ class BreadthFirstSearch(object):
             return
 
 
-
-def best_result(grid: Grid, my_player: str, move_player: str, move: int) -> str:
-    return best_result_dfs(grid, my_player, move_player, move)
-
-
 def moves_results(grid, my_player, move_player) -> List[str]:
-    return [best_result(grid, my_player, move_player, move) for move in range(grid.w)]
+    searcher = DepthFirstSearcher(my_player)
+    return [searcher.best_result(grid, move_player, move) for move in range(grid.w)]
 
 
 def now() -> float:
@@ -317,11 +357,12 @@ def now() -> float:
 
 def find_moves_results_action(ap):
     print('searching for the moves results...')
-    grid = Grid(3, 3)
+    grid = Grid(4, 4)
     grid.print()
     checkpoint = now()
     for idx, result in enumerate(moves_results(grid, PA, PA)):
         print('move: {}, result: {}'.format(idx, result))
+    print('iterations: {}'.format(iterations))
     print('duration: {}s'.format(now() - checkpoint))
 
 
