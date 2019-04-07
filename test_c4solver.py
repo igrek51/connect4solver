@@ -212,6 +212,18 @@ def test_win_checker_streak_check():
     assert list_winner([PA, PB, PB, PB, PB]) == PB
     assert list_winner([None, PA, PA, None, PB, PB, PB, PB, None]) == PB
 
+def test_min_win_condition():
+    assert Grid.parse('''
+...
+.A.
+AAB
+'''.strip(), min_win=2).winner() == PA
+    assert Grid.parse('''
+...
+..A
+ABB
+'''.strip(), min_win=2).winner() == PB
+
 # --- Move Best Results
 
 def test_best_result_simplest4():
@@ -222,11 +234,12 @@ ABAB
 ABAB
 '''.strip())
     searcher = DepthFirstSearcher(PA)
-    assert searcher.best_result(grid, PA, 0) == WIN
-    assert searcher.best_result(grid, PA, 0) == WIN
-    assert searcher.best_result(grid, PA, 1) == LOSE
-    assert searcher.best_result(grid, PA, 2) == WIN
-    assert searcher.best_result(grid, PA, 3) == LOSE
+    assert searcher.best_result_on_move(grid, PA, 0) == WIN
+    assert searcher.best_result_on_move(grid, PA, 0) == WIN
+    assert searcher.best_result_on_move(grid, PA, 1) == LOSE
+    assert searcher.best_result_on_move(grid, PA, 2) == WIN
+    assert searcher.best_result_on_move(grid, PA, 3) == LOSE
+    assert searcher.best_result(grid, PA) == WIN
 
 def test_best_result_simple_tie():
     grid = Grid.parse('''
@@ -236,8 +249,9 @@ AB
 AB
 '''.strip())
     searcher = DepthFirstSearcher(PA)
-    assert searcher.best_result(grid, PA, 0) == WIN
-    assert searcher.best_result(grid, PA, 1) == TIE
+    assert searcher.best_result_on_move(grid, PA, 0) == WIN
+    assert searcher.best_result_on_move(grid, PA, 1) == TIE
+    assert searcher.best_result(grid, PA) == WIN
 
 def test_best_result_none():
     grid = Grid.parse('''
@@ -247,10 +261,18 @@ AB
 AB
 '''.strip())
     searcher = DepthFirstSearcher(PA)
-    assert searcher.best_result(grid, PA, 0) is None
+    assert searcher.best_result_on_move(grid, PA, 0) is None
+    grid = Grid.parse('''
+BA
+AB
+AB
+AB
+'''.strip())
+    searcher = DepthFirstSearcher(PA)
+    assert searcher.best_result(grid, PA) is TIE
 
 
-def test_best_result_none():
+def test_best_result_3x3_tie():
     grid = Grid.parse('''
 ...
 ...
@@ -259,7 +281,18 @@ def test_best_result_none():
     assert moves_results(grid, PA, PA) == [TIE, TIE, TIE]
 
 
+def test_best_result_3x3_tic_tac_toe():
+    grid = Grid(w=3, h=3, min_win=3)
+    assert moves_results(grid, PA, PA) == [TIE, TIE, TIE]
 
+
+def test_best_result_unfair_3x3_tic_tac_toe():
+    grid = Grid(w=3, h=3, min_win=2)
+    searcher = DepthFirstSearcher(PA)
+    assert searcher.best_result_on_move(grid, PA, 1) == WIN
+    assert moves_results(grid, PA, PA) == [WIN, WIN, WIN]
+    grid = Grid(w=3, h=3, min_win=2)
+    assert moves_results(grid, my_player=PA, moving_player=PB) == [LOSE, LOSE, LOSE]
 
 
 
